@@ -1,77 +1,111 @@
-import { Component } from "react";
+import { fetchGallery } from 'api/galleryApi';
+import { Component } from 'react';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Button from "./Button/Button";
-import ImageGallery from "./ImageGallery/ImageGallery";
-//import ImageGalleryItem from "./ImageGalleryItem/ImageGalleryItem";
-//import fetchGallery from "api/galleryApi";
+import Button from './Button/Button';
+import ImageGallery from './ImageGallery/ImageGallery';
+import ImageGalleryItem from './ImageGalleryItem/ImageGalleryItem';
+import Loader from './Loader/Loader';
+import Modal from './Modal/Modal';
 
-import Searchbar from "./Searchbar/Searchbar";
+import Searchbar from './Searchbar/Searchbar';
 import './styles.css';
-
-const BASE_URL = 'https://pixabay.com/api/';
-const API_KEY = '30112757-abf194c84cfc9ccef9cde8e0f';
-
 
 export default class App extends Component {
   state = {
     pictures: [],
     query: '',
     page: 1,
+    totalHits: null,
+    isLoading: false,
+    error: null,
+    showModal: false,
+  };
 
-  }
-  
-  componentDidMount() {
-    fetch(`${BASE_URL}?q=${this.state.query}&page=${this.state.page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`)
-    .then(res => res.json()).then(query => this.setState({ query}));
-  }
-
-  /*async searchImages() {
-    const { query } = this.state;
+  async serachPictures() {
+    const { pictures, query, page } = this.state;
     try {
-      const data = await fetchGallery(query);
+      const { data } = await fetchGallery(query, page);
+      if (!data.totalHits) {
+        toast.error(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+      }
       this.setState({
-        pictures: data.hits,
+        pictures: [...pictures, ...data.hits],
+        totalHits: data.totalHits,
+        isLoading: false,
+        error: null,
       });
-      //console.log(data, '--res');
+      console.log(data, '---res');
     } catch (error) {
-
+      this.setState({ error});
     }
-    
+      finally {
+        this.setState({ isLoading: false});
+      }
   }
 
-  getPictures = () => {
+  componentDidUpdate(prevProps, prevState) {
+    const { query, page } = this.state;
 
+    if (query !== prevState.query) {
+      this.setState({ isLoading: true });
+      this.serachPictures();
+    }
+
+    if (query === prevState.query && page !== prevState.page) {
+      this.setState({ isLoading: true });
+      this.serachPictures();
+    }
   }
 
-  async componentDidMount() {
-    //this.getPictures();
+  componentDidMount() {
     fetchGallery('react').then(console.log);
-  }*/
+  }
 
   handleFormSubmit = query => {
     this.setState({ query, pictures: [], page: 1 });
-  }
-
-  handleOnLoadMore = () => {
-    this.setState(prevState => {
-      return { page: prevState.page + 1 };
-    });
+    this.isLoading = true;
   };
 
+  handleOnLoadMore = () => {
+    this.setState(({ page }) => ({ page: page + 1 }));
+    this.isLoading = true;
+  };
+
+  toggleModal = () => {
+    this.setState(({ showModal }) => ({
+      showModal: !showModal,
+    }))
+  }
+
   render() {
+    const { pictures, isLoading, totalHits, showModal } = this.state;
     return (
       <div className="App">
-        <Searchbar onSubmit={this.handleFormSubmit}/>
-        <ImageGallery/>
+        <Searchbar onSubmit={this.handleFormSubmit} />
+        <ImageGallery>
+          {pictures.map(({ webformatURL, id }) => (
+            <ImageGalleryItem key={id} id={id} webformatURL={webformatURL} />
+          ))}
+        </ImageGallery>
+        {showModal && <Modal />}
+        
 
-        <Button onClick={this.handleOnLoadMore}/>
-          
+        {pictures.length <= totalHits ? (
+          <Button onClick={this.handleOnLoadMore} />
+        ) : (
+          toast.error(
+            "We're sorry, but you've reached the end of search results."
+          )
+        )}
+
+        {isLoading && <Loader />}
 
         <ToastContainer autoClose={3000} />
-
       </div>
-    )
+    );
   }
-};
+}

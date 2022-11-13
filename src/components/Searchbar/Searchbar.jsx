@@ -18,7 +18,7 @@ export default class Searchbar extends Component {
     event.preventDefault();
     if (this.state.query.trim() === '') {
         toast.error(
-        'Sorry, there are no images matching your search query. Please try again.'
+        'Please enter text in the search bar!'
       );
       return;
     }
