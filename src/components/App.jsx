@@ -21,6 +21,7 @@ export default class App extends Component {
     isLoading: false,
     error: null,
     showModal: false,
+    largeImageURL: null,
   };
 
   async serachPictures() {
@@ -37,14 +38,14 @@ export default class App extends Component {
         totalHits: data.totalHits,
         isLoading: false,
         error: null,
+        showButton: true,
       });
       console.log(data, '---res');
     } catch (error) {
-      this.setState({ error});
+      this.setState({ error });
+    } finally {
+      this.setState({ isLoading: false });
     }
-      finally {
-        this.setState({ isLoading: false});
-      }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -63,6 +64,12 @@ export default class App extends Component {
 
   componentDidMount() {
     fetchGallery('react').then(console.log);
+
+    window.addEventListener('keydown', this.handleKeyDown);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.handleKeyDown);
   }
 
   handleFormSubmit = query => {
@@ -78,28 +85,50 @@ export default class App extends Component {
   toggleModal = () => {
     this.setState(({ showModal }) => ({
       showModal: !showModal,
-    }))
-  }
+    }));
+  };
+
+  handleModal = e => {
+    let currentImageUrl = e.target.dataset.large;
+
+    if (e.target.nodeName === 'IMG') {
+      this.setState(({ showModal }) => ({
+        showModal: !showModal,
+        largeImageURL: currentImageUrl,
+      }));
+    }
+  };
+
+  handleKeyDown = e => {
+    if (e.code === 'Escape') {
+      this.setState({ showModal: false });
+    }
+  };
 
   render() {
-    const { pictures, isLoading, totalHits, showModal } = this.state;
+    const { pictures, isLoading, totalHits, showModal, largeImageURL } =
+      this.state;
+    const openModal = this.handleModal;
     return (
       <div className="App">
         <Searchbar onSubmit={this.handleFormSubmit} />
         <ImageGallery>
-          {pictures.map(({ webformatURL, id }) => (
-            <ImageGalleryItem key={id} id={id} webformatURL={webformatURL} />
+          {pictures.map(({ webformatURL, id, largeImageURL }) => (
+            <ImageGalleryItem
+              key={id}
+              id={id}
+              webformatURL={webformatURL}
+              largeImage={largeImageURL}
+              openModal={openModal}
+            />
           ))}
         </ImageGallery>
-        {showModal && <Modal />}
-        
+        {showModal && (
+          <Modal largeImageURL={largeImageURL} onClose={this.toggleModal} />
+        )}
 
-        {pictures.length <= totalHits ? (
+        {pictures.length >= 12 && pictures.length < totalHits && (
           <Button onClick={this.handleOnLoadMore} />
-        ) : (
-          toast.error(
-            "We're sorry, but you've reached the end of search results."
-          )
         )}
 
         {isLoading && <Loader />}

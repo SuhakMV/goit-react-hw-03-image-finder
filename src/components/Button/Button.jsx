@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
 
-export default function Button( props ) {
+export default function Button(props) {
   return (
-    <button className='Button' type="button" onClick={props.onClick}>
+    <button className="Button" type="button" onClick={props.onClick}>
       Load more
     </button>
-  )
+  );
 }
 
 Button.protoType = {

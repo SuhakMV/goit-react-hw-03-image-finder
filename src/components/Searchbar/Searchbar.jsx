@@ -17,9 +17,7 @@ export default class Searchbar extends Component {
   handleSubmit = event => {
     event.preventDefault();
     if (this.state.query.trim() === '') {
-        toast.error(
-        'Please enter text in the search bar!'
-      );
+      toast.error('Please enter text in the search bar!');
       return;
     }
 
