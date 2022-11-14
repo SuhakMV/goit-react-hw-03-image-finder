@@ -63,8 +63,6 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-    fetchGallery('react').then(console.log);
-
     window.addEventListener('keydown', this.handleKeyDown);
   }
 
