@@ -40,7 +40,7 @@ export default class App extends Component {
         error: null,
         showButton: true,
       });
-      console.log(data, '---res');
+      //console.log(data, '---res');
     } catch (error) {
       this.setState({ error });
     } finally {
